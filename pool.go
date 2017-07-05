@@ -4,7 +4,7 @@ import "sync"
 
 type Pool struct {
 	head *entry
-	sync.Mutex
+	mu   sync.Mutex
 	// New optionally specifies a function to generate
 	// a value when Get would otherwise return nil.
 	// It may not be changed concurrently with calls to Get.
@@ -37,10 +37,10 @@ func (p *Pool) putFreeEntry(e *entry) {
 // Get selects an arbitrary item from the Pool, removes it from the Pool.
 // If Get would otherwise return nil and p.New is non-nil, Get returns the result of calling p.New.
 func (p *Pool) Get() interface{} {
-	p.Lock()
+	p.mu.Lock()
 	e := p.head
 	if e == nil {
-		p.Unlock()
+		p.mu.Unlock()
 		if p.New == nil {
 			return nil
 		}
@@ -51,16 +51,16 @@ func (p *Pool) Get() interface{} {
 
 	v := e.v
 	p.putFreeEntry(e)
-	p.Unlock()
+	p.mu.Unlock()
 	return v
 }
 
 // Put adds v to the pool.
 func (p *Pool) Put(v interface{}) {
-	p.Lock()
+	p.mu.Lock()
 	e := p.getFreeEntry()
 	e.v = v
 	e.next = p.head
 	p.head = e
-	p.Unlock()
+	p.mu.Unlock()
 }
