@@ -1,8 +1,11 @@
 package pool
 
-import "sync"
+import (
+	"sync"
+)
 
 type Pool struct {
+	l    int64
 	head *entry
 	mu   sync.Mutex
 	// New optionally specifies a function to generate
@@ -46,7 +49,7 @@ func (p *Pool) Get() interface{} {
 		}
 		return p.New()
 	}
-
+	p.l--
 	p.head = e.next
 
 	v := e.v
@@ -58,9 +61,28 @@ func (p *Pool) Get() interface{} {
 // Put adds v to the pool.
 func (p *Pool) Put(v interface{}) {
 	p.mu.Lock()
+	p.l++
 	e := p.getFreeEntry()
 	e.v = v
 	e.next = p.head
 	p.head = e
+	p.mu.Unlock()
+}
+
+// Len returns the number of items in pool.
+func (p *Pool) Len() int64 {
+	var l int64
+	p.mu.Lock()
+	l = p.l
+	p.mu.Unlock()
+	return l
+}
+
+// Reset drops all items in pool.
+func (p *Pool) Reset() {
+	p.mu.Lock()
+	p.head = nil
+	p.freeEntries = nil
+	p.l = 0
 	p.mu.Unlock()
 }

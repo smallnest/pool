@@ -17,6 +17,7 @@ func BenchmarkPool_Pool(b *testing.B) {
 			p.Get()
 		}
 	})
+
 }
 
 func BenchmarkPool_SyncPool(b *testing.B) {
