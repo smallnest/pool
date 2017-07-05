@@ -87,3 +87,15 @@ func (p *Pool) Reset() {
 	p.l = 0
 	p.mu.Unlock()
 }
+
+// Range iterates all items in pool. Notice it locks the pool in case of ranging.
+func (p *Pool) Range(f func(v interface{}) bool) {
+	p.mu.Lock()
+
+	h := p.head
+	for h != nil {
+		f(h.v)
+		h = h.next
+	}
+	p.mu.Unlock()
+}
