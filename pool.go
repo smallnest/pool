@@ -94,7 +94,9 @@ func (p *Pool) Range(f func(v interface{}) bool) {
 
 	h := p.head
 	for h != nil {
-		f(h.v)
+		if ok := f(h.v); !ok {
+			break
+		}
 		h = h.next
 	}
 	p.mu.Unlock()
