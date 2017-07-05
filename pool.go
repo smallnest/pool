@@ -4,6 +4,7 @@ import (
 	"sync"
 )
 
+// Pool is an object pool by linked list.
 type Pool struct {
 	l    int64
 	head *entry
